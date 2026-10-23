@@ -1,0 +1,159 @@
+{
+  "date": "2026-10-12",
+  "backend_postgresql": {
+    "tests": 113,
+    "passed": 113,
+    "coverage_critical_percent": 97,
+    "statements": 1678,
+    "missing": 44
+  },
+  "backend_sqlite": {
+    "tests": 113,
+    "postgresql_only_skips": 5
+  },
+  "playwright": {
+    "tests": 20,
+    "passed": 20,
+    "viewports": [
+      [
+        1440,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ]
+  },
+  "dependency_advisories": {
+    "npm_reported": 0,
+    "python_reported": 0
+  },
+  "backup": {
+    "restore_passed": true,
+    "history_triggers": 8,
+    "source_preserved": true
+  },
+  "intranet_rehearsal": {
+    "tls_verified_with_temporary_ca": true,
+    "https_readiness": true,
+    "secure_csrf_cookie": true,
+    "secure_httponly_session": true,
+    "real_login": true,
+    "csp_hsts": true,
+    "runtime_ddl_blocked": true,
+    "history_update_blocked": true,
+    "recovered_outbox_held": true,
+    "source_database_untouched": true
+  },
+  "load_initial": {
+    "users": 1000,
+    "definitions": 10000,
+    "occurrences": 100000,
+    "concurrent_clients": 100,
+    "requests": 300,
+    "server": "gunicorn 3 workers x 4 threads",
+    "fixture_seconds": 22.61,
+    "elapsed_seconds": 38.89,
+    "requests_per_second": 7.71,
+    "endpoints": {
+      "/api/v1/dashboard/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 10.809,
+        "p95_seconds": 18.794,
+        "max_seconds": 20.631
+      },
+      "/api/v1/reports/occurrences/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 10.738,
+        "p95_seconds": 19.273,
+        "max_seconds": 20.268
+      },
+      "/api/v1/reports/summary/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 9.864,
+        "p95_seconds": 17.845,
+        "max_seconds": 19.24
+      }
+    }
+  },
+  "load_optimized_without_workflow": {
+    "users": 1000,
+    "definitions": 10000,
+    "occurrences": 100000,
+    "concurrent_clients": 100,
+    "requests": 300,
+    "server": "gunicorn 3 workers x 4 threads",
+    "fixture_seconds": 18.7,
+    "elapsed_seconds": 4.81,
+    "requests_per_second": 62.37,
+    "endpoints": {
+      "/api/v1/dashboard/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 1.321,
+        "p95_seconds": 2.406,
+        "max_seconds": 2.799
+      },
+      "/api/v1/reports/occurrences/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 1.372,
+        "p95_seconds": 2.366,
+        "max_seconds": 2.547
+      },
+      "/api/v1/reports/summary/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 1.256,
+        "p95_seconds": 2.302,
+        "max_seconds": 2.632
+      }
+    }
+  },
+  "load_with_workflow": {
+    "users": 1000,
+    "definitions": 10000,
+    "occurrences": 100000,
+    "workflow_transitions": 40000,
+    "concurrent_clients": 100,
+    "requests": 300,
+    "server": "gunicorn 3 workers x 4 threads",
+    "fixture_seconds": 30.38,
+    "elapsed_seconds": 15.48,
+    "requests_per_second": 19.38,
+    "endpoints": {
+      "/api/v1/dashboard/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 4.097,
+        "p95_seconds": 5.779,
+        "max_seconds": 6.443
+      },
+      "/api/v1/reports/occurrences/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 4.124,
+        "p95_seconds": 5.851,
+        "max_seconds": 6.376
+      },
+      "/api/v1/reports/summary/": {
+        "requests": 100,
+        "errors": 0,
+        "p50_seconds": 5.133,
+        "p95_seconds": 6.919,
+        "max_seconds": 8.208
+      }
+    }
+  },
+  "docker_resources": {
+    "cpus": 8,
+    "memory_bytes": 4106604544,
+    "architecture": "aarch64"
+  },
+  "institutional_deployment_activated": false,
+  "manual_wcag_or_pentest_certified": false
+}

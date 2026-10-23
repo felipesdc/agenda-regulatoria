@@ -1,0 +1,13 @@
+Agenda Regulatória
+{{ kind }}
+
+Olá, {{ recipient }}.
+Compromisso: {{ event.identifier }}
+Título: {{ event.title }}
+Vencimento: {{ event.due_date }}
+Situação no evento: {{ status_label }}
+Responsáveis: {{ event.responsible|join:", " }}
+Descrição resumida: {{ event.description }}
+
+Acesse a ocorrência: {{ link }}
+Confira o estado atual na aplicação. Esta mensagem contém apenas um resumo.

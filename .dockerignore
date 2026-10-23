@@ -1,0 +1,13 @@
+.venv
+.git
+.env
+frontend/node_modules
+frontend/dist
+frontend/.angular
+backend/*.sqlite3
+**/__pycache__
+
+.backups/
+.env.intranet
+
+.env.migrations

@@ -1,0 +1,78 @@
+import {test,expect,Page} from '@playwright/test';
+const password=process.env['DEMO_PASSWORD'];
+async function login(page:Page,username:string){
+ if(!password)throw new Error('Configure DEMO_PASSWORD');
+ await page.goto('/');
+ await page.getByLabel('Usuário',{exact:true}).fill(username);
+ await page.getByLabel('Senha',{exact:true}).fill(password);
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Seu espaço de trabalho'})).toBeVisible();
+}
+async function logout(page:Page){await page.getByRole('button',{name:'Sair',exact:true}).click();await expect(page.getByRole('heading',{name:'Acesse sua agenda'})).toBeVisible();}
+async function find(page:Page,title:string){
+ await page.getByRole('button',{name:'Compromissos',exact:true}).click();
+ await page.getByLabel('Pesquisar compromissos').fill(title);
+ await page.getByRole('button',{name:'Filtrar',exact:true}).click();
+ await page.locator('.commitment-row').filter({hasText:title}).click();
+ await expect(page.locator('.detail-panel')).toBeVisible();
+}
+test('create, execute, reject with complement, approve, audit and organizational isolation',async({page})=>{
+ test.setTimeout(90000);
+ const title=`E2E fictício ${test.info().project.name} ${Date.now()}`;
+ await login(page,'demandante1');
+ await page.getByRole('button',{name:'Compromissos',exact:true}).click();
+ await page.getByRole('button',{name:'Novo compromisso',exact:true}).click();
+ await page.getByLabel('Título',{exact:true}).fill(title);
+ await page.getByLabel('Descrição da obrigação').fill('Demonstração automatizada, sem validade regulatória.');
+ await page.getByLabel('Fundamentação normativa',{exact:true}).fill('Teste fictício');
+ await page.getByLabel('Unidade responsável').selectOption({label:'Riscos'});
+ const responsible=page.getByLabel('Responsáveis pela execução');
+ await expect(responsible.locator('option').filter({hasText:'demandado1'})).toHaveCount(1);
+ const id=await responsible.locator('option').filter({hasText:'demandado1'}).getAttribute('value');
+ await responsible.selectOption(id!);
+ await page.getByLabel('Entidade',{exact:true}).selectOption({index:1});
+ await page.getByLabel('Categoria',{exact:true}).selectOption({index:1});
+ await page.getByLabel('Data de vencimento').fill('2026-12-15');
+ const createdResponse=page.waitForResponse(r=>r.url().endsWith('/api/v1/definitions/')&&r.request().method()==='POST');
+ await page.getByRole('button',{name:'Salvar compromisso',exact:true}).click();
+ const occurrenceId=(await (await createdResponse).json()).id;
+ await expect(page.locator('.detail-panel')).toContainText(title);
+ await expect(page.locator('.detail-panel')).toContainText('REG-');
+ await page.getByRole('button',{name:'Editar ocorrência',exact:true}).click();
+ await page.getByLabel('Justificativa da alteração').fill('Ajuste documentado pelo demandante');
+ await page.getByRole('button',{name:'Salvar alteração',exact:true}).click();
+ await expect(page.getByRole('status')).toContainText('nova versão');
+ await logout(page);
+ await login(page,'demandado1');await find(page,title);
+ await expect(page.getByRole('button',{name:'Aprovar conclusão',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Iniciar execução',exact:true}).click();
+ await page.getByLabel('Nova providência').fill('Primeira verificação executada.');
+ await page.getByRole('button',{name:'Registrar providência',exact:true}).click();
+ await expect(page.locator('.detail-panel')).toContainText('Primeira verificação executada.');
+ await page.getByRole('button',{name:'Submeter conclusão',exact:true}).click();
+ await expect(page.locator('.detail-meta .badge')).toContainText('Aguardando validação');await logout(page);
+ await login(page,'demandante1');await find(page,title);
+ await page.getByLabel('Justificativa (obrigatória para rejeitar, cancelar ou reabrir)').fill('Complemente a conferência.');
+ await page.getByRole('button',{name:'Rejeitar conclusão',exact:true}).click();
+ await expect(page.locator('.detail-meta .badge')).toContainText('Rejeitado');await logout(page);
+ await login(page,'demandado1');await find(page,title);
+ await page.getByRole('button',{name:'Iniciar execução',exact:true}).click();
+ await page.getByLabel('Nova providência').fill('Complemento de conferência executado.');
+ await page.getByRole('button',{name:'Registrar providência',exact:true}).click();
+ await expect(page.locator('.detail-panel')).toContainText('Complemento de conferência executado.');
+ await page.getByRole('button',{name:'Submeter conclusão',exact:true}).click();
+ await expect(page.locator('.detail-meta .badge')).toContainText('Aguardando validação');await logout(page);
+ await login(page,'demandante1');await find(page,title);
+ await page.getByRole('button',{name:'Aprovar conclusão',exact:true}).click();
+ await expect(page.locator('.detail-meta .badge')).toContainText('Concluído');
+ await expect(page.getByRole('button',{name:'Editar ocorrência',exact:true})).toHaveCount(0);
+ await page.screenshot({path:`../tests/e2e/artifacts/phase2-${test.info().project.name}.png`,fullPage:true});await logout(page);
+ await login(page,'demandante2');
+ await page.getByRole('button',{name:'Compromissos',exact:true}).click();
+ await page.getByLabel('Pesquisar compromissos').fill(title);await page.getByRole('button',{name:'Filtrar',exact:true}).click();
+ await expect(page.locator('.commitment-row').filter({hasText:title})).toHaveCount(0);await logout(page);
+ await login(page,'admin');await page.getByRole('button',{name:'Auditoria',exact:true}).click();
+ await page.getByLabel('ID do registro auditado').fill(occurrenceId);await page.getByRole('button',{name:'Filtrar auditoria',exact:true}).click();
+ await expect(page.locator('.audit-list')).toContainText('workflow.approve');
+ await expect(page.locator('.audit-list')).toContainText('workflow.reject');
+});

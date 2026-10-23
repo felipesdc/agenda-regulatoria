@@ -1,0 +1,3 @@
+export interface Field {id:string;key:string;name:string;kind:string;description:string;required:boolean;default:unknown;rules:Record<string,unknown>;options:{value:string;label:string}[];order:number;active:boolean;revision:number;}
+export interface FormSchema {id:string;category:string;name:string;revision:number;fields:Field[];reason:string;created_at:string;}
+export const fieldKinds:Record<string,string>={short_text:'Texto curto',long_text:'Texto longo',integer:'Número inteiro',decimal:'Número decimal',date:'Data',datetime:'Data e hora',single_select:'Seleção única',multi_select:'Seleção múltipla',boolean:'Booleano',url:'URL',email:'E-mail',user:'Referência a usuário',unit:'Referência a unidade'};

@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 100
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+[tool.coverage.run]
+source = ["apps.accounts.permissions", "apps.accounts.proxy", "apps.accounts.views", "apps.commitments.services", "apps.commitments.views", "apps.audit.services", "apps.audit.views", "apps.commitments.calendar_filters", "apps.commitments.calendar_views", "apps.commitments.recurrence_engine", "apps.commitments.recurrence_services", "apps.commitments.recurrence_views", "apps.notifications.services", "apps.notifications.recovery", "apps.notifications.tasks", "apps.notifications.views", "apps.customfields.validation", "apps.customfields.views", "apps.reports.services", "apps.reports.views", "apps.reports.exports"]
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

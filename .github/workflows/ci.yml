@@ -1,0 +1,79 @@
+name: Agenda quality
+on: [push, pull_request]
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_USER: agenda
+          POSTGRES_DB: agenda
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U agenda" --health-interval 5s --health-retries 10
+    env:
+      DJANGO_SECRET_KEY: ci-only-key-not-production
+      DJANGO_DEBUG: 'true'
+      POSTGRES_HOST: localhost
+      POSTGRES_USER: agenda
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: agenda
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r backend/requirements.txt
+      - run: ruff check backend tools && ruff format --check backend tools
+      - run: python backend/manage.py makemigrations --check --dry-run
+      - run: cd backend && coverage run --rcfile=../pyproject.toml manage.py test --noinput && coverage report --rcfile=../pyproject.toml
+      - run: python backend/manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yaml
+      - run: pip install pip-audit==2.10.1 && pip-audit -r backend/requirements.txt --no-deps --disable-pip
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: cd frontend && npm ci && npm run typecheck && npm run build && npm audit
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - name: Generate disposable environment
+        run: |
+          python3 - <<'PYENV'
+          from pathlib import Path
+          import secrets
+          values={"DJANGO_SECRET_KEY":secrets.token_urlsafe(48),"POSTGRES_PASSWORD":secrets.token_urlsafe(24),"DEMO_PASSWORD":secrets.token_urlsafe(24)}
+          content=Path('.env.example').read_text()
+          for key,value in values.items():
+              content=content.replace(key+'=\n',key+'='+value+'\n')
+          Path('.env').write_text(content)
+          PYENV
+      - name: Build and seed
+        run: |
+          docker compose up --build --wait
+          docker compose exec -T backend python manage.py seed_foundation
+          docker compose exec -T backend python manage.py seed_commitments
+          docker compose exec -T backend python manage.py seed_notification_demo
+      - name: Install browser and dependencies
+        run: cd frontend && npm ci && npx playwright install --with-deps chromium
+      - name: Verify full flows
+        run: |
+          export DEMO_PASSWORD=$(sed -n 's/^DEMO_PASSWORD=//p' .env)
+          export E2E_BASE_URL=http://localhost:8080
+          cd frontend
+          npm run test:e2e
+      - name: Restore and intranet rehearsal
+        run: |
+          python3 tools/backup.py --restore-check
+          python3 tools/intranet_probe.py
+      - name: Read load on an isolated database
+        run: python3 tools/load_check.py
+      - name: Stop disposable stack
+        if: always()
+        run: docker compose down

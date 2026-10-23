@@ -1,0 +1,72 @@
+# Independent deployment, no demo seed/Mailpit/public database or backend ports.
+services:
+  backend:
+    image: ${BACKEND_IMAGE:?Set approved backend image}
+    env_file: .env.intranet
+    volumes: ["${POSTGRES_CA_FILE:?Set PostgreSQL CA file}:/etc/agenda/db-ca.pem:ro"]
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 4 --worker-class gthread --timeout 60 --access-logfile -
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen(urllib.request.Request('http://backend:8000/ready/', headers={'X-Forwarded-Proto':'https'}))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  worker:
+    image: ${BACKEND_IMAGE:?Set approved backend image}
+    env_file: .env.intranet
+    volumes: ["${POSTGRES_CA_FILE:?Set PostgreSQL CA file}:/etc/agenda/db-ca.pem:ro"]
+    command: celery -A config worker --loglevel=INFO --concurrency=2 --hostname=notifications@%h
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on:
+      backend: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD-SHELL, "celery -A config inspect ping --destination notifications@$$HOSTNAME --timeout=5"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  scheduler:
+    image: ${BACKEND_IMAGE:?Set approved backend image}
+    env_file: .env.intranet
+    command: celery -A config beat --loglevel=INFO --schedule=/app/beat/schedule
+    volumes: ["beat_state:/app/beat", "${POSTGRES_CA_FILE:?Set PostgreSQL CA file}:/etc/agenda/db-ca.pem:ro"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on:
+      worker: {condition: service_healthy}
+  frontend:
+    image: ${FRONTEND_IMAGE:?Set approved frontend image}
+    environment:
+      INTRANET_HOST: ${INTRANET_HOST:?Set exact hostname}
+    ports: ["${INTRANET_BIND:-127.0.0.1}:8443:443"]
+    volumes:
+      - ./infrastructure/intranet/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${TLS_DIRECTORY:?Set corporate certificate directory}:/etc/nginx/tls:ro
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    depends_on:
+      backend: {condition: service_healthy}
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes: [redis_intranet:/data]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  redis_intranet:
+  beat_state:
