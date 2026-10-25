@@ -18,3 +18,4 @@ backend/.coverage
 .env.intranet
 
 .env.migrations
+.DS_Store
