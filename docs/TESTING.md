@@ -137,3 +137,11 @@ Ensaio de intranet sobre cópia: TLS com CA temporária e hostname verificados, 
 Carga: 1000 usuários/10000 séries/100000 ocorrências, 100 clientes/300 GETs, Gunicorn 3×4. Sem histórico: 62,37 req/s, p95 máximo 2,406 s, zero erros; referência inicial 7,71 req/s/p95 máximo 19,273 s. Complementar com datas do motor e 40000 transições: 19,38 req/s, p95 painel 5,779 s/lista 5,851 s/resumo 6,919 s, zero erros. Docker 8 vCPUs/3,82 GiB/aarch64, host compartilhado. Não mede carga prolongada, escrita simultânea, SMTP/anexos/failover nem aprova SLA de produção. PHASE8_RESULTS.json contém resultados agregados, sem tokens/dados pessoais.
 
 A revisão corrigiu contrastes, foco modal, mensagens aninhadas, carregamento duplicado de relações ao otimizar consultas e dependência de IP fixo do proxy. Rodadas com essas falhas/reinícios foram corrigidas e não representam os resultados finais acima. Restrições remanescentes e operação em PHASE8.md/RELEASE.md/RECOVERY.md.
+
+## Continuidade de consultas — 29/10/2026
+
+**22/22 Playwright** em desktop/mobile aprovados, incluindo dois cenários novos de restauração dos filtros/página, separação de rascunho/aplicado, retorno à página 1 após 404 e limpeza no logout. Dados de navegação são fictícios, criados pela API; apenas o 404 de página inválida é simulado no teste. Todo estado do cliente fica em memória da aba, separado por usuário/lista, sem armazenar resultados.
+
+**114/114 testes PostgreSQL** aprovados. Caso novo mantém o scanner de vencimentos com a transação aberta e verifica locks independentes em unidade/demandante: o scanner deve bloquear só a ocorrência. Esse teste cobre a correção de um deadlock intermitente encontrado na regressão real. Teste antigo de calendário corrigido para considerar dias adjacentes da grade mensal, relevante perto do fim do mês.
+
+TypeScript estrito, build frontend, Ruff/formato, OpenAPI sem warnings e migrations sem pendências aprovados. Containers locais atualizados. Uso e limites em NAVIGATION.md. Relatórios/calendário não receberam memória de consultas nova; permanecem seus fluxos próprios. Fixtures fictícias permanecem no banco conforme histórico existente.

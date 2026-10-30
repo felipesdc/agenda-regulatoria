@@ -343,7 +343,7 @@ def scan_deadlines(today=None):
     for pk in qs.values_list("pk", flat=True).iterator(chunk_size=200):
         with transaction.atomic():
             occurrence = (
-                CommitmentOccurrence.objects.select_for_update()
+                CommitmentOccurrence.objects.select_for_update(of=("self",))
                 .select_related("definition__unit", "definition__requester")
                 .get(pk=pk)
             )

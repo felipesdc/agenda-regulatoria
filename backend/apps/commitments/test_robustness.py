@@ -38,3 +38,43 @@ class ConcurrentEditTests(TransactionTestCase):
         self.assertEqual(self.occ.revision, 2)
         self.assertEqual(self.occ.versions.count(), 2)
         self.assertEqual(AuditEvent.objects.filter(operation="occurrence.updated").count(), 1)
+
+    def test_deadline_scan_does_not_exclusively_lock_unit_or_requester(self):
+        from threading import Event
+        from unittest.mock import patch
+        from django.db import transaction
+        from django.utils import timezone
+        from apps.notifications.services import scan_deadlines
+        from apps.organizations.models import OrganizationalUnit
+        from apps.accounts.models import User
+
+        self.occ.due_date = timezone.localdate()
+        self.occ.save()
+        scanning = Event()
+        release = Event()
+
+        def pause_emit(*args, **kwargs):
+            scanning.set()
+            if not release.wait(10):
+                raise RuntimeError("Scanner synchronization timed out")
+
+        def scan():
+            try:
+                return scan_deadlines(timezone.localdate())
+            finally:
+                connections.close_all()
+
+        with patch("apps.notifications.services.emit", side_effect=pause_emit):
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(scan)
+                try:
+                    self.assertTrue(scanning.wait(10))
+                    # Both rows are joined for reading, not mutation by the scanner.
+                    with transaction.atomic():
+                        OrganizationalUnit.objects.select_for_update(nowait=True).get(
+                            pk=self.unit.pk
+                        )
+                        User.objects.select_for_update(nowait=True).get(pk=self.requester.pk)
+                finally:
+                    release.set()
+                future.result(timeout=10)

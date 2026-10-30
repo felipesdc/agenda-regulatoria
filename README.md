@@ -69,3 +69,6 @@ O Painel inicial apresenta indicadores reais do seu escopo. Abra **Relatórios**
 
 ## Fase 8 — Robustez e entrega
 Regressão funcional/segurança/axe e carga HTTP isolada, consultas/indexação otimizadas, dump/restauração em cópia e ensaio HTTPS com papel de banco sem DDL. Execute `python3 tools/backup.py --restore-check`; não restaura sobre sua base. Para intranet, [RELEASE.md](docs/RELEASE.md), [RECOVERY.md](docs/RECOVERY.md) e [PHASE8.md](docs/PHASE8.md) descrevem perfil separado, resultados e pendências de homologação. A configuração local permanece em compose.yaml/.env.
+
+## Continuidade da navegação
+As listas de compromissos preservam a última consulta aplicada e a página ao alternar seções, durante a sessão da aba. A paginação respeita os filtros aplicados; logout limpa esse estado. Detalhes em [NAVIGATION.md](docs/NAVIGATION.md).
