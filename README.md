@@ -72,3 +72,5 @@ Regressão funcional/segurança/axe e carga HTTP isolada, consultas/indexação 
 
 ## Continuidade da navegação
 As listas de compromissos preservam a última consulta aplicada e a página ao alternar seções, durante a sessão da aba. A paginação respeita os filtros aplicados; logout limpa esse estado. Detalhes em [NAVIGATION.md](docs/NAVIGATION.md).
+
+Cada seção possui sua própria URL, como `/calendario`, `/compromissos` e `/relatorios`, com suporte a atualização, favoritos do navegador e voltar/avançar. Rotas protegidas verificam a sessão e áreas administrativas exigem administrador. Links antigos de notificações continuam funcionando. Mapa de rotas e comportamento de sessão em [NAVIGATION.md](docs/NAVIGATION.md).

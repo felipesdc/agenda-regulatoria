@@ -11,7 +11,7 @@ test('login, organizational scope, profile and logout',async({page})=>{
  await expect(page.locator('.unit-row')).toHaveCount(1);
  await expect(page.locator('.unit-row')).toContainText('Riscos');
  await expect(page.locator('.unit-row')).not.toContainText('Operações');
- await page.getByRole('button',{name:'Meu perfil'}).click();
+ await page.getByRole('link',{name:'Meu perfil'}).click();await expect(page).toHaveURL(/\/perfil$/);
  await expect(page.getByRole('heading',{name:'Meu perfil',exact:true})).toBeVisible();
  await expect(page.locator('.panel')).toContainText('Demandado');
  await page.screenshot({path:`../tests/e2e/artifacts/${test.info().project.name}.png`,fullPage:true});

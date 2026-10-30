@@ -15,7 +15,9 @@ export class Calendar implements OnInit {
  profile=input.required<Profile>();units=input.required<Unit[]>();private http=inject(HttpClient);private fb=inject(FormBuilder);
  scale=signal<Scale>('month');anchor=signal(this.today());busy=signal(false);error=signal('');message=signal('');total=signal(0);days=signal<Record<string,CalendarDay>>({});
  entities=signal<Catalog[]>([]);categories=signal<Catalog[]>([]);requesters=signal<Person[]>([]);assignees=signal<Person[]>([]);favorites=signal<Favorite[]>([]);
+ canCreate=computed(()=>this.profile().administrator||this.profile().memberships.some(m=>m.role==='requester'));creatingDate=signal('');
  selectedOccurrence=signal<string|null>(null);selectedDay=signal('');dayRows=signal<Occurrence[]>([]);dayCount=signal(0);dayPage=signal(1);dayBusy=signal(false);
+ createDialog=viewChild<ElementRef<HTMLDialogElement>>('createDialog');
  detailDialog=viewChild<ElementRef<HTMLDialogElement>>('detailDialog');dayDialog=viewChild<ElementRef<HTMLDialogElement>>('dayDialog');
  weekdays=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];labels:Record<string,string>={pending:'Pendente',in_progress:'Em andamento',awaiting_validation:'Aguardando validação',completed:'Concluído',rejected:'Rejeitado',cancelled:'Cancelado'};
  filters=this.fb.nonNullable.group({q:[''],entity:[''],unit:[''],requester:[''],assignee:[''],category:[''],priority:[''],status:[''],periodicity:[''],date_start:[''],date_end:['']});
@@ -41,6 +43,8 @@ export class Calendar implements OnInit {
  async showDay(value:string){if(this.busy()||this.dayBusy())return;const previousRange=range(this.anchor(),this.scale()).join('/');this.anchor.set(value);this.selectedDay.set(value);this.dayPage.set(1);this.dayRows.set([]);this.dayCount.set(0);this.dayDialog()?.nativeElement.showModal();if(previousRange!==range(this.anchor(),this.scale()).join('/'))await this.load();await this.loadDay();}
  async loadDay(){if(this.dayBusy())return;this.dayBusy.set(true);this.error.set('');try{const f=this.filters.getRawValue(),date=this.selectedDay();if((f.date_start&&date<f.date_start)||(f.date_end&&date>f.date_end)){this.dayRows.set([]);this.dayCount.set(0);return;}const p=await firstValueFrom(this.http.get<Page<Occurrence>>('/api/v1/occurrences/',{params:this.params(date,date).set('page',this.dayPage())}));this.dayRows.set(p.results);this.dayCount.set(p.count);}catch(e){this.fail(e);}finally{this.dayBusy.set(false);}}
  async dayNavigate(delta:number){if(this.dayBusy())return;this.dayPage.update(p=>p+delta);await this.loadDay();}
+ createOnDay(){if(!this.canCreate())return;this.closeDay();this.creatingDate.set(this.selectedDay());this.createDialog()?.nativeElement.showModal();}
+ closeCreate(){this.createDialog()?.nativeElement.close();this.creatingDate.set('');}
  closeDay(){this.dayDialog()?.nativeElement.close();}
  openOccurrence(id:string){this.closeDay();this.selectedOccurrence.set(id);this.detailDialog()?.nativeElement.showModal();}
  closeDetail(){this.detailDialog()?.nativeElement.close();this.selectedOccurrence.set(null);}

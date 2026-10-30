@@ -4,7 +4,7 @@ test('recurrence preview, monthly leap date, series revisions and independent oc
  const password=process.env['DEMO_PASSWORD'];if(!password)throw new Error('Configure DEMO_PASSWORD');
  const tag=`REC fictício ${test.info().project.name} ${Date.now()}`;
  await page.goto('/');await page.getByLabel('Usuário',{exact:true}).fill('demandante1');await page.getByLabel('Senha',{exact:true}).fill(password);await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Seu espaço de trabalho'})).toBeVisible();
- await page.getByRole('button',{name:'Compromissos',exact:true}).click();await page.getByRole('button',{name:'Novo compromisso',exact:true}).click();
+ await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos$/);await page.getByRole('button',{name:'Novo compromisso',exact:true}).click();
  await page.getByLabel('Título',{exact:true}).fill(tag);await page.getByLabel('Descrição da obrigação').fill('Série fictícia automatizada.');await page.getByLabel('Unidade responsável').selectOption({label:'Riscos'});
  const people=page.getByLabel('Responsáveis pela execução');await expect(people.locator('option').filter({hasText:'demandado1'})).toHaveCount(1);await people.selectOption((await people.locator('option').filter({hasText:'demandado1'}).getAttribute('value'))!);
  await page.getByLabel('Entidade',{exact:true}).selectOption({index:1});await page.getByLabel('Categoria',{exact:true}).selectOption({index:1});await page.getByLabel('Data de referência',{exact:true}).fill('2028-01-30');await page.getByLabel('Data de vencimento',{exact:true}).fill('2028-01-31');

@@ -20,7 +20,7 @@ test('calendar navigation, filters, favorites, daily overflow and modal workflow
  const due=new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'});
  const cookie=(await page.context().cookies()).find(c=>c.name==='csrftoken');
  for(let i=0;i<5;i++){const r=await page.request.post('/api/v1/definitions/',{headers:{'X-CSRFToken':cookie!.value},data:{title:tag+' '+i,description:'Teste fictício do calendário.',unit:profile.memberships.find((m:{role:string})=>m.role==='requester').unit_id,entity:entities.results[0].id,category:categories.results[0].id,assignees:[people.results[0].id],reference_date:due,due_date:due,priority:'high'}});expect(r.status()).toBe(201);}
- await page.getByRole('button',{name:'Calendário',exact:true}).click();
+ await page.getByRole('link',{name:'Calendário',exact:true}).click();await expect(page).toHaveURL(/\/calendario$/);
  await expect(page.locator('.month-grid .calendar-cell')).toHaveCount(42);
  await page.getByText('Filtros e favoritos',{exact:true}).click();
  await page.getByLabel('Pesquisa',{exact:true}).fill(tag);await page.getByLabel('Prioridade',{exact:true}).selectOption('high');await page.getByRole('button',{name:'Aplicar filtros',exact:true}).click();

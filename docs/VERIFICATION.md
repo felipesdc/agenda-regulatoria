@@ -53,3 +53,15 @@ Carga HTTP isolada com 100 clientes/100000 ocorrências e variante de 40000 tran
 ## Melhoria incremental — Continuidade das consultas (29/10/2026)
 
 Listas restauram última consulta aplicada/página por usuário/modo ao retornar de outra seção. Recarregam os dados/autorização no backend; logout limpa a memória da aba. Paginação não aplica rascunhos implicitamente e se recupera de página inválida. Regressores: 22/22 navegador e 114/114 PostgreSQL; tipos/build/lint/formato/OpenAPI/migrations aprovados. Scanner de alertas passou a bloquear apenas a ocorrência, corrigindo bloqueio indevido de unidade/demandante. Documentação em NAVIGATION.md.
+
+### Criação e edição intuitivas — 29/10/2026
+
+Formulário organizado em grupos, unidade única preenchida automaticamente e foco inicial no título. Selecionar um dia no calendário oferece criação com vencimento preenchido, respeitando o perfil do usuário. Salvar criação/edição atualiza a agenda. Build de produção, TypeScript e 24/24 testes de interface aprovados; axe aplicado também ao formulário de criação aberto. Uso descrito em [NAVIGATION.md](NAVIGATION.md).
+
+### Documentação da API e CSP — 29/10/2026
+
+A rota `/api/v1/docs/` usa `SpectacularSwaggerSplitView`: a inicialização do Swagger é servida por `/api/v1/docs/?script=` como JavaScript de mesma origem. Isso corrige a tela vazia causada pelo bloqueio do script embutido pela política `script-src 'self'`, sem afrouxar a CSP. Os recursos continuam locais pelo sidecar e o acesso continua autenticado. O teste de interface em `security.spec.ts` verifica título, operações, tipo de conteúdo do script e ausência de erros de CSP em desktop e celular.
+
+### Navegação por URLs protegidas — 29/10/2026
+
+Angular Router instalado na versão 21.2.25, compatível com o Angular existente. Cada seção tem URL, título e indicação de página atual; menu com links nativos. Guards consultam sessão/unidades e restringem auditoria e campos personalizados a administradores. Interceptor confirma expiração antes de limpar sessão em resposta 401/403, preservando erros de permissão com sessão válida. Destino após login limitado a rotas conhecidas; UUIDs validados. Links `/?occurrence=UUID` preservados. Compilação/TypeScript e **32/32 testes Playwright aprovados**, incluindo escopo de outra unidade, sessão expirada, redirecionamento externo bloqueado, histórico e recarregamento. Ver [NAVIGATION.md](NAVIGATION.md) e [SECURITY.md](SECURITY.md).

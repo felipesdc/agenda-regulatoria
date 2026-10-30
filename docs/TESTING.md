@@ -145,3 +145,11 @@ A revisão corrigiu contrastes, foco modal, mensagens aninhadas, carregamento du
 **114/114 testes PostgreSQL** aprovados. Caso novo mantém o scanner de vencimentos com a transação aberta e verifica locks independentes em unidade/demandante: o scanner deve bloquear só a ocorrência. Esse teste cobre a correção de um deadlock intermitente encontrado na regressão real. Teste antigo de calendário corrigido para considerar dias adjacentes da grade mensal, relevante perto do fim do mês.
 
 TypeScript estrito, build frontend, Ruff/formato, OpenAPI sem warnings e migrations sem pendências aprovados. Containers locais atualizados. Uso e limites em NAVIGATION.md. Relatórios/calendário não receberam memória de consultas nova; permanecem seus fluxos próprios. Fixtures fictícias permanecem no banco conforme histórico existente.
+
+### Formulários e criação por data — 29/10/2026
+
+Compilação de produção Angular/Docker e TypeScript aprovados. Suíte Playwright completa: **24/24 testes aprovados** em desktop e celular, incluindo criação real pelo calendário, edição com justificativa, atualização da agenda e análise axe do formulário de criação. Regressão cobre os fluxos existentes de execução/validação, recorrência, campos personalizados, notificações, relatórios, navegação e segurança. Nenhum backend ou esquema de banco foi alterado nesta melhoria. Registros fictícios gerados pelos testes permanecem no ambiente local.
+
+### Rotas protegidas — 29/10/2026
+
+Suíte Playwright completa: **32/32 testes aprovados** em desktop e celular. Inclui seis cenários novos para links diretos, recarregamento, URLs do menu, voltar/avançar, logout/histórico, rota administrativa negada, administrador autorizado, destino externo rejeitado, sessão expirada detectada por operação da interface, links antigos de e-mail, UUID inválido e acesso a ocorrência de outra unidade. Os testes existentes usam links do menu e aguardam a URL de destino antes da próxima interação. Build Angular/Docker e TypeScript aprovados; o npm não apontou vulnerabilidades na instalação do Router. Nenhuma alteração de backend ou esquema de dados foi necessária para as rotas da interface.

@@ -15,7 +15,7 @@ from apps.audit.views import AuditList
 
 from django.contrib import admin
 from django.urls import path
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from apps.accounts import views
 
 urlpatterns = [
@@ -34,7 +34,7 @@ urlpatterns = [
     path("api/v1/units/", views.UnitList.as_view()),
     path("api/v1/users/", views.UserList.as_view()),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
+    path("api/v1/docs/", SpectacularSwaggerSplitView.as_view(url_name="schema"), name="docs"),
 ]
 
 router = DefaultRouter()
