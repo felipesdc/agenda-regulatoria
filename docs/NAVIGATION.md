@@ -51,3 +51,15 @@ Os guards consultam a sessão e as unidades no servidor antes de ativar uma seç
 Uma resposta 401/403 de operação da interface dispara uma verificação da sessão: se ela expirou, os dados em memória são limpos e a interface volta ao login. Uma recusa de permissão com sessão válida permanece como erro da operação. O logout limpa o perfil, as unidades e as consultas memorizadas; voltar no navegador exige uma nova verificação da sessão. Credenciais e tokens não são armazenados nas URLs ou em armazenamento local. A autorização de dados continua obrigatória na API; guards não substituem essas verificações.
 
 Links anteriores de e-mail no formato `/?occurrence=UUID` são encaminhados para `/compromissos/UUID`, inclusive quando é necessário autenticar antes. Filtros e paginação das listas continuam em memória, conforme descrito acima.
+
+### Central de pendências — 30/10/2026
+
+A rota protegida `/pendencias` está disponível no menu e no Painel inicial, inclusive como destino seguro após login. Os detalhes abrem em diálogo; fechar atualiza os indicadores e a lista mantendo o grupo e a página quando possível. Regras em [PENDING_CENTER.md](PENDING_CENTER.md).
+
+### Formulários com alterações não salvas — 30/10/2026
+
+Sair de uma rota, fechar um painel de criação/edição ou fazer logout pede confirmação quando há alterações de compromisso ainda não salvas. Cancelar mantém os dados. A sessão expirada continua voltando ao login. Ao fechar/recarregar a aba, o navegador pode mostrar seu aviso nativo. Consulte [FORMS.md](FORMS.md) para alcance e limites.
+
+### Filtros na URL — 30/10/2026
+
+As consultas aplicadas agora usam parâmetros na URL em compromissos/atribuições/validações, auditoria, calendário, relatórios, notificações e pendências. A URL explícita tem prioridade sobre a memória da sessão; links de listas sem parâmetros ainda podem recuperar a consulta anterior. Filtros, páginas e períodos são restaurados ao recarregar e pelo histórico, inclusive após login. Alterações em formulários não entram no endereço. Regras, exemplos e limites em [URL_FILTERS.md](URL_FILTERS.md).

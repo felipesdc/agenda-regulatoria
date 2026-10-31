@@ -20,9 +20,11 @@ test('calendar navigation, filters, favorites, daily overflow and modal workflow
  const due=new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'});
  const cookie=(await page.context().cookies()).find(c=>c.name==='csrftoken');
  for(let i=0;i<5;i++){const r=await page.request.post('/api/v1/definitions/',{headers:{'X-CSRFToken':cookie!.value},data:{title:tag+' '+i,description:'Teste fictício do calendário.',unit:profile.memberships.find((m:{role:string})=>m.role==='requester').unit_id,entity:entities.results[0].id,category:categories.results[0].id,assignees:[people.results[0].id],reference_date:due,due_date:due,priority:'high'}});expect(r.status()).toBe(201);}
- await page.getByRole('link',{name:'Calendário',exact:true}).click();await expect(page).toHaveURL(/\/calendario$/);
+ let releaseCatalog!:()=>void,catalogCaptured!:()=>void;const catalogGate=new Promise<void>(resolve=>{releaseCatalog=resolve;});const catalogReady=new Promise<void>(resolve=>{catalogCaptured=resolve;});let holdCatalog=true;
+ await page.route('**/api/v1/entities/**',async route=>{if(!holdCatalog){await route.continue();return;}holdCatalog=false;const response=await route.fetch();catalogCaptured();await catalogGate;await route.fulfill({response});});
+ await page.getByRole('link',{name:'Calendário',exact:true}).click();await expect(page).toHaveURL(/\/calendario(?:\?|$)/);
  await expect(page.locator('.month-grid .calendar-cell')).toHaveCount(42);
- await page.getByText('Filtros e favoritos',{exact:true}).click();
+ await page.getByText('Filtros e favoritos',{exact:true}).click();await catalogReady;await expect(page.getByRole('button',{name:'Aplicar filtros',exact:true})).toBeDisabled();releaseCatalog();await expect(page.getByRole('button',{name:'Aplicar filtros',exact:true})).toBeEnabled();
  await page.getByLabel('Pesquisa',{exact:true}).fill(tag);await page.getByLabel('Prioridade',{exact:true}).selectOption('high');await page.getByRole('button',{name:'Aplicar filtros',exact:true}).click();
  await expect(page.locator('.calendar-summary')).toContainText('5 compromissos');
  await expect(page.locator('.month-grid .calendar-event')).toHaveCount(3);

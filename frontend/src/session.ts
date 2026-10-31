@@ -1,3 +1,4 @@
+import {cleanQuery} from './query-url';
 import {Injectable,inject,signal} from '@angular/core';
 import {HttpClient,HttpErrorResponse,HttpInterceptorFn} from '@angular/common/http';
 import {Router} from '@angular/router';
@@ -11,8 +12,8 @@ export class Session {
  profile=signal<SessionProfile|null>(null);units=signal<Unit[]>([]);error=signal('');
  private pending:Promise<boolean>|null=null;
  clear(){this.profile.set(null);this.units.set([]);this.queries.clear();}
- async refresh():Promise<boolean>{
-  if(this.pending)return this.pending;
+ async refresh(force=false):Promise<boolean>{
+  if(this.pending){if(!force)return this.pending;await this.pending;}
   this.pending=this.check();try{return await this.pending;}finally{this.pending=null;}
  }
  private async check(){try{
@@ -32,9 +33,13 @@ export const sessionExpiryInterceptor:HttpInterceptorFn=(request,next)=>{
   return from(session.refresh()).pipe(mergeMap(valid=>{if(!valid)void router.navigate(['/entrar'],{queryParams:{returnTo:safeReturn(returnTo)},replaceUrl:true});return throwError(()=>error);}));
  }));
 };
-const paths=['/painel','/relatorios','/calendario','/compromissos','/minhas-atribuicoes','/validacoes','/campos-personalizados','/auditoria','/unidades','/notificacoes','/perfil'];
+const paths=['/pendencias','/painel','/relatorios','/calendario','/compromissos','/minhas-atribuicoes','/validacoes','/campos-personalizados','/auditoria','/unidades','/notificacoes','/perfil'];
 export const occurrenceId=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function safeReturn(value:unknown):string {
- if(typeof value!=='string')return '/painel';
- return paths.includes(value)||new RegExp('^/compromissos/'+occurrenceId.source.slice(1,-1)+'$','i').test(value)?value:'/painel';
+ if(typeof value!=='string'||!value.startsWith('/')||value.startsWith('//'))return '/painel';
+ try{const url=new URL(value,'https://agenda.invalid');if(url.origin!=='https://agenda.invalid'||url.hash)return '/painel';
+  if(!paths.includes(url.pathname)&&!new RegExp('^/compromissos/'+occurrenceId.source.slice(1,-1)+'$','i').test(url.pathname))return '/painel';
+  const params:Record<string,string|string[]>={};url.searchParams.forEach((_,name)=>{const values=url.searchParams.getAll(name);params[name]=values.length===1?values[0]:values;});
+  const query=new URLSearchParams(cleanQuery(url.pathname,params)).toString();return url.pathname+(query?'?'+query:'');
+ }catch{return '/painel';}
 }

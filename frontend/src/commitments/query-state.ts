@@ -11,7 +11,7 @@ export interface CommitmentQueryState {
   page: number;
 }
 
-// Session memory only: never persist queries or business data in browser storage.
+// Fallback for list links without query parameters. No localStorage or sessionStorage.
 @Injectable({providedIn:'root'})
 export class CommitmentQueryStore {
   private states = new Map<string,CommitmentQueryState>();

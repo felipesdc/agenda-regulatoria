@@ -101,6 +101,7 @@ REST_FRAMEWORK = {
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "Agenda Regulatória",
+    "COMPONENT_SPLIT_REQUEST": True,
     "VERSION": "1.0.0",
     "ENUM_NAME_OVERRIDES": {
         "OccurrenceStatusEnum": "apps.commitments.models.CommitmentOccurrence.Status",
@@ -195,3 +196,34 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
     DATABASES["default"]["OPTIONS"] = {"sslmode": os.getenv("POSTGRES_SSLMODE", "prefer")}
     if os.getenv("POSTGRES_SSLROOTCERT"):
         DATABASES["default"]["OPTIONS"]["sslrootcert"] = os.environ["POSTGRES_SSLROOTCERT"]
+
+# Bounded uploads, private storage, corporate scanner integration.
+EVIDENCE_MAX_FILE_BYTES = int(os.getenv("EVIDENCE_MAX_FILE_BYTES", str(2 * 1024 * 1024)))
+EVIDENCE_MAX_FILES = int(os.getenv("EVIDENCE_MAX_FILES", "3"))
+if not 1 <= EVIDENCE_MAX_FILE_BYTES <= 10 * 1024 * 1024 or not 1 <= EVIDENCE_MAX_FILES <= 5:
+    raise ImproperlyConfigured("Invalid evidence upload limits")
+EVIDENCE_STORAGE_BACKEND = os.getenv(
+    "EVIDENCE_STORAGE_BACKEND", "apps.commitments.evidence_storage.DatabaseEvidenceStorage"
+)
+EVIDENCE_SCANNER_HOST = os.getenv("EVIDENCE_SCANNER_HOST", "")
+EVIDENCE_SCANNER_PORT = int(os.getenv("EVIDENCE_SCANNER_PORT", "3310"))
+EVIDENCE_SCANNER_TIMEOUT = 15
+DATA_UPLOAD_MAX_MEMORY_SIZE = 12 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 256 * 1024
+DATA_UPLOAD_MAX_NUMBER_FILES = 5
+
+EVIDENCE_MAX_OCCURRENCE_BYTES = int(
+    os.getenv("EVIDENCE_MAX_OCCURRENCE_BYTES", str(50 * 1024 * 1024))
+)
+EVIDENCE_MAX_OCCURRENCE_FILES = int(os.getenv("EVIDENCE_MAX_OCCURRENCE_FILES", "30"))
+if (
+    not 1 <= EVIDENCE_MAX_OCCURRENCE_BYTES <= 500 * 1024 * 1024
+    or not 1 <= EVIDENCE_MAX_OCCURRENCE_FILES <= 100
+):
+    raise ImproperlyConfigured("Invalid evidence occurrence limits")
+
+FILE_UPLOAD_HANDLERS = [
+    "apps.commitments.upload_limits.EvidenceUploadLimits",
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+]

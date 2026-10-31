@@ -65,3 +65,29 @@ A rota `/api/v1/docs/` usa `SpectacularSwaggerSplitView`: a inicialização do S
 ### Navegação por URLs protegidas — 29/10/2026
 
 Angular Router instalado na versão 21.2.25, compatível com o Angular existente. Cada seção tem URL, título e indicação de página atual; menu com links nativos. Guards consultam sessão/unidades e restringem auditoria e campos personalizados a administradores. Interceptor confirma expiração antes de limpar sessão em resposta 401/403, preservando erros de permissão com sessão válida. Destino após login limitado a rotas conhecidas; UUIDs validados. Links `/?occurrence=UUID` preservados. Compilação/TypeScript e **32/32 testes Playwright aprovados**, incluindo escopo de outra unidade, sessão expirada, redirecionamento externo bloqueado, histórico e recarregamento. Ver [NAVIGATION.md](NAVIGATION.md) e [SECURITY.md](SECURITY.md).
+
+### Central de pendências — 30/10/2026
+
+Central disponível em `/pendencias`, no menu e no Painel inicial. Endpoint autenticado `/api/v1/pending-center/` agrega atrasados, próximos vencimentos (hoje a +7 inclusive) e aguardando validação, reaplicando escopo e exclusão de unidades inativas. Listas de 50 registros, ordenação estável, estados de carregamento/erro/vazio e recuperação de página inválida. Detalhes em diálogo, ações de workflow existentes e atualização ao fechar. Cartão do grupo selecionado usa o mesmo total da paginação, evitando divergência durante alterações concorrentes.
+
+PostgreSQL: 117/117 testes aprovados e 16/16 de relatórios reaplicados após o ajuste final do contador. Interface: 36/36 aprovados em desktop/celular, com dados reais fictícios, aprovação pela interface e axe. Build, TypeScript, Ruff e validação OpenAPI aprovados. Corrigida também a reutilização de consulta anônima de sessão anterior ao login, com teste de concorrência reproduzível. Documentação: [PENDING_CENTER.md](PENDING_CENTER.md).
+
+### Formulários intuitivos e saída protegida — 30/10/2026
+
+Seleção de responsáveis com busca e caixas de seleção, lista dos selecionados e remoção individual, usando o mesmo controle e validação de atribuições. Erros obrigatórios por campo após perda de foco, indicação acessível de erro e resumo dos campos que exigem revisão. Criação/edição de ocorrências protegidas ao fechar, trocar rota e sair; aviso nativo ao fechar/recarregar aba. Cancelar mantém dados; iniciar novo cadastro após descarte limpa o acompanhamento anterior. A proteção não armazena rascunhos no navegador nem impede a limpeza por sessão expirada.
+
+Versão final compilada e atualizada localmente. **38/38 testes de interface aprovados**, desktop/celular, com axe e tentativa real de fechamento da aba cancelada. TypeScript e verificação de whitespace aprovados. Nenhuma nova dependência ou alteração de backend foi necessária. Guia em [FORMS.md](FORMS.md).
+
+### Consultas na URL — 30/10/2026
+
+Filtros aplicados e paginação sincronizados em compromissos/atribuições/validações, auditoria, calendário, relatórios, notificações e pendências. Período/escala do calendário e agrupamento/paginações do relatório preservados. Rascunhos de pesquisa e formulários ficam fora da URL. Histórico restaura consultas e impede sobrescrita por resposta antiga; página inválida retorna à primeira mantendo filtros. Normalização por rota aplicada também ao destino após login, com autorização de dados mantida no backend.
+
+Versão final compilada e atualizada localmente, TypeScript/whitespace aprovados e **46/46 testes Playwright aprovados** em desktop/celular. Inclui link compartilhado entre unidades, caracteres especiais, parâmetros inválidos/repetidos, requisição real atrasada e formulário em edição preservado. Sem alteração de API, esquema de banco ou dependências. Guia em [URL_FILTERS.md](URL_FILTERS.md).
+
+### Anexos comprobatórios — 30/10/2026
+
+Anexos opcionais na nova providência, upload multipart limitado durante a recepção, validação de estrutura/formatos, quotas por providência/ocorrência, armazenamento privado transacional no PostgreSQL e SHA-256. Download autorizado e auditado, com verificação dos bytes antes da resposta, attachment/nosniff/no-store. Retirada lógica com motivo/autor/data, sem apagar o original, bloqueada durante validação/encerramento. Histórico protegido por triggers; interface Storage preparada para adaptadores privados, apenas o provedor de banco implementado e testado.
+
+Integração clamd com falha fechada e obrigatória fora de DEBUG. No uso local sem scanner, registro/interface informam validação estrutural sem antivírus. Não há alegação de homologação de antivírus corporativo nem inspeção real com assinaturas nos testes.
+
+Validação final: **125 testes PostgreSQL e 48 testes de interface aprovados**, desktop/celular/axe. Recuperação em cópia preservou os seis arquivos do snapshot e verificou seus hashes, as três tabelas estáveis e onze triggers. Build, TypeScript, Ruff/format, OpenAPI e consistência de migrações aprovados; dependências sem vulnerabilidades conhecidas no pip-audit. Corrigido também o bloqueio inicial de ações do calendário durante carregamento. Detalhes em [EVIDENCE.md](EVIDENCE.md).

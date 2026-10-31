@@ -1,4 +1,5 @@
-@if(section() === 'overview'){<app-reports [profile]="profile()!" [units]="units()" [dashboard]="true"/><section class="panel"><h2>Unidades autorizadas</h2>@for(u of units();track u.id){<div class="unit-row"><strong>{{u.name}}</strong><small>{{u.code}}</small></div>}</section>}
+@if(section() === 'overview'){<section class="panel"><h2>Central de pendências</h2><p>Veja atrasados, próximos vencimentos e conclusões aguardando validação.</p><a routerLink="/pendencias">Abrir central de pendências</a></section><app-reports [profile]="profile()!" [units]="units()" [dashboard]="true"/><section class="panel"><h2>Unidades autorizadas</h2>@for(u of units();track u.id){<div class="unit-row"><strong>{{u.name}}</strong><small>{{u.code}}</small></div>}</section>}
+@else if(section()==='pending'){<app-pending [profile]="profile()!" [units]="units()"/>}
 @else if(section() === 'reports'){<app-reports [profile]="profile()!" [units]="units()"/>}
 @else if(section() === 'calendar'){<app-calendar [profile]="profile()!" [units]="units()" />}
 @else if(section() === 'commitments'){<app-commitments [profile]="profile()!" [units]="units()" mode="all" />}

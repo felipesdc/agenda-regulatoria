@@ -229,12 +229,30 @@ def update_occurrence(actor, occurrence, data):
 
 
 @transaction.atomic
-def add_action(actor, occurrence, text):
+def add_action(actor, occurrence, text, files=None):
     occurrence = CommitmentOccurrence.objects.select_for_update().get(pk=occurrence.pk)
     if not can_execute(actor, occurrence):
         raise PermissionDenied("Somente responsáveis atribuídos podem registrar providências.")
     if occurrence.status not in ["in_progress", "rejected"]:
         raise ValidationError("Inicie a execução antes de registrar providências.")
+    if files:
+        from django.conf import settings
+        from django.db.models import Sum, Count
+        from .models import Evidence
+
+        used = Evidence.objects.filter(action__occurrence=occurrence).aggregate(
+            size=Sum("size"), count=Count("pk")
+        )
+        if (
+            used["count"] + len(files) > settings.EVIDENCE_MAX_OCCURRENCE_FILES
+            or (used["size"] or 0) + sum(file["size"] for file in files)
+            > settings.EVIDENCE_MAX_OCCURRENCE_BYTES
+        ):
+            raise ValidationError(
+                {
+                    "files": "Limite de anexos do compromisso atingido; retiradas lógicas também contam para a retenção."
+                }
+            )
     action = ActionRecord.objects.create(occurrence=occurrence, author=actor, text=text)
     record(
         actor,
@@ -243,6 +261,10 @@ def add_action(actor, occurrence, text):
         occurrence.definition.unit,
         after={"occurrence": str(occurrence.pk), "text": text},
     )
+    if files:
+        from .evidence import store_files
+
+        store_files(actor, action, files)
     return action
 
 

@@ -1,3 +1,4 @@
+import {DraftGuard} from './draft-guard';
 import {Component,inject} from '@angular/core';
 import {CanActivateFn,Router,Routes} from '@angular/router';
 import {Session,safeReturn,occurrenceId} from './session';
@@ -18,11 +19,12 @@ const legacy:CanActivateFn=route=>{
  const router=inject(Router),id=route.queryParamMap.get('occurrence');
  return router.parseUrl(id&&occurrenceId.test(id)?'/compromissos/'+id:'/painel');
 };
-function page(path:string,section:string,title:string,administrator=false):Routes[number]{return {path,title:title+' · Agenda Regulatória',component:WorkspacePage,canActivate:[authenticated],runGuardsAndResolvers:'always',data:{section,title,administrator}};}
+function page(path:string,section:string,title:string,administrator=false):Routes[number]{return {path,title:title+' · Agenda Regulatória',component:WorkspacePage,canDeactivate:[(_component,_route,current,next)=>current.url.split(/[?#]/)[0]===next?.url.split(/[?#]/)[0]||!inject(Session).profile()||inject(DraftGuard).confirmDiscard()],canActivate:[authenticated],runGuardsAndResolvers:'always',data:{section,title,administrator}};}
 export const routes:Routes=[
  {path:'',pathMatch:'full',component:LoginRoute,canActivate:[legacy]},
  {path:'entrar',component:LoginRoute,canActivate:[login]},
  page('painel','overview','Seu espaço de trabalho'),
+ page('pendencias','pending','Central de pendências'),
  page('relatorios','reports','Relatórios'),page('calendario','calendar','Calendário'),
  page('compromissos','commitments','Compromissos'),
  {...page('compromissos/:id','linked','Detalhes do compromisso'),canActivate:[authenticated,(route)=>{const router=inject(Router);return occurrenceId.test(route.paramMap.get('id')||'')||router.createUrlTree(['/nao-encontrado']);}]},

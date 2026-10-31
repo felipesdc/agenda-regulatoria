@@ -153,3 +153,34 @@ Compilação de produção Angular/Docker e TypeScript aprovados. Suíte Playwri
 ### Rotas protegidas — 29/10/2026
 
 Suíte Playwright completa: **32/32 testes aprovados** em desktop e celular. Inclui seis cenários novos para links diretos, recarregamento, URLs do menu, voltar/avançar, logout/histórico, rota administrativa negada, administrador autorizado, destino externo rejeitado, sessão expirada detectada por operação da interface, links antigos de e-mail, UUID inválido e acesso a ocorrência de outra unidade. Os testes existentes usam links do menu e aguardam a URL de destino antes da próxima interação. Build Angular/Docker e TypeScript aprovados; o npm não apontou vulnerabilidades na instalação do Router. Nenhuma alteração de backend ou esquema de dados foi necessária para as rotas da interface.
+
+### Central de pendências — 30/10/2026
+
+- PostgreSQL: **117/117 testes aprovados**; após o ajuste de consistência do cartão selecionado, **16/16 testes de relatórios/pendências** novamente aprovados.
+- Interface: **36/36 testes Playwright aprovados** em desktop e celular, incluindo o ciclo real de submissão/aprovação na central, escopo, contadores, paginação, detalhes, recarregamento, axe e regressão dos fluxos anteriores.
+- Build Angular/Docker, TypeScript, Ruff e OpenAPI com `--validate --fail-on-warn` aprovados. Nenhuma migração necessária.
+- Corrida de login reproduzida com uma consulta anônima real atrasada: a verificação após autenticação agora força uma consulta nova. Os dois testes específicos passaram antes da regressão completa.
+
+Redis/Mailpit estavam parados no início da regressão de notificações; foram iniciados e worker/agendador reiniciados. Na execução final, os serviços estavam saudáveis e os testes de SMTP passaram. Registros fictícios criados pelos testes permanecem no ambiente local com trilha de auditoria, conforme [PENDING_CENTER.md](PENDING_CENTER.md).
+
+### Formulários de compromissos — 30/10/2026
+
+**38/38 testes Playwright aprovados** na versão final em desktop e celular. Cobertura nova: mensagens de erro por campo e correção, busca de responsáveis com preservação/remoção de seleção, recusa de descarte por rota/painel, tentativa real de fechamento da aba cancelada, descarte aprovado, reinício de cadastro limpo e Enter na busca sem submissão. Criação e edição reais continuam verificadas, inclusive o cancelamento da desistência durante edição. Axe no formulário aberto e ausência de transbordamento aprovados.
+
+Compilação de produção Angular/Docker, TypeScript e `git diff --check` aprovados. Sem novas dependências, alterações de API ou migração nesta melhoria. A proteção de rascunhos foi aplicada à criação/edição de ocorrências; veja [FORMS.md](FORMS.md).
+
+### Filtros na URL — 30/10/2026
+
+**46/46 testes Playwright aprovados** na versão final em desktop e celular. Os oito cenários novos (quatro por viewport) verificam consultas aplicadas, caracteres especiais, recarregamento, histórico, retomada após login, parâmetros inválidos/repetidos, escopo entre unidades, recuperação de páginas, calendário, relatórios, notificações e pendências. Incluem uma resposta real atrasada durante voltar e a preservação de formulário em edição. A série fictícia de 51 ocorrências existente confirma página 2 na URL e restauração ao recarregar.
+
+Regressão inclui criação/edição, rascunhos, campos personalizados, recorrência, relatórios/exportações, SMTP, permissões, Swagger e axe. Build Angular/Docker, TypeScript e `git diff --check` aprovados. Não houve nova dependência, alteração de API ou migração. Uso e limites em [URL_FILTERS.md](URL_FILTERS.md).
+
+### Anexos comprobatórios — 30/10/2026
+
+- **125/125 testes PostgreSQL aprovados**, incluindo arquivos válidos/falsos, PDF ativo recusado, DOCX/XLSX, limites de tamanho/quantidade/retenção, autorização/revogação/unidade inativa, integridade, retirada lógica, rollback e triggers append-only.
+- **48/48 testes Playwright aprovados** na versão final, desktop/celular: envio real, recusa de falso PDF, download com comparação de bytes/SHA-256, retirada justificada, usuário sem sessão/outra unidade, axe e regressão dos fluxos anteriores.
+- Testes TCP do protocolo clamd verificam resposta limpa, detecção e erro com servidor de teste. Não foi executado um scanner ClamAV real com assinaturas; DEBUG local sem scanner informa validação estrutural, e fora de DEBUG os arquivos exigem inspeção registrada.
+- Backup/restauração em base temporária aprovado: comparação das três tabelas de anexos estáveis, seis arquivos recuperados com tamanho/SHA-256 corretos e **11 triggers** de proteção. Base original preservada; dumps privados em `.backups`.
+- Build Angular/Docker, TypeScript, Ruff/check/format, OpenAPI (`--validate --fail-on-warn`), migrações sem divergência e whitespace aprovados. `pip-audit` não encontrou vulnerabilidades conhecidas nas dependências fixadas, incluindo Pillow 13.0.0 e pypdf 6.21.4.
+
+A regressão identificou e corrigiu uma corrida preexistente no carregamento inicial do calendário: ações agora ficam bloqueadas até o carregamento terminar. O teste segura uma resposta real de catálogo para verificar esse bloqueio. Guia e limites em [EVIDENCE.md](EVIDENCE.md).

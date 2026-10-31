@@ -240,3 +240,30 @@ class RecurrenceVersion(UUIDModel):
                 fields=["definition", "revision"], name="unique_recurrence_revision"
             )
         ]
+
+
+class EvidenceBlob(UUIDModel):
+    # Private content is part of the PostgreSQL transaction and normal backups.
+    content = models.BinaryField()
+
+
+class Evidence(UUIDModel):
+    action = models.ForeignKey(ActionRecord, on_delete=models.PROTECT, related_name="evidence")
+    filename = models.CharField(max_length=180)
+    media_type = models.CharField(max_length=120)
+    size = models.PositiveIntegerField()
+    sha256 = models.CharField(max_length=64)
+    storage_key = models.CharField(max_length=200, unique=True)
+    storage_backend = models.CharField(max_length=200)
+    inspection = models.CharField(max_length=250)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["uploaded_at", "id"]
+
+
+class EvidenceWithdrawal(UUIDModel):
+    evidence = models.OneToOneField(Evidence, on_delete=models.PROTECT, related_name="withdrawal")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reason = models.CharField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)

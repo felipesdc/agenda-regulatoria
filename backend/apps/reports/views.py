@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework import generics, serializers, viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, extend_schema_serializer, OpenApiParameter
 from apps.commitments.calendar_filters import CalendarFilters, parse_filters
 from apps.commitments.serializers import OccurrenceSerializer
 from apps.audit.services import record
@@ -324,3 +324,50 @@ class FavoriteView(
             before={"name": instance.name, "filters": instance.filters},
         )
         instance.delete()
+
+
+@extend_schema_serializer(many=False)
+class PendingCenterOutput(serializers.Serializer):
+    count = serializers.IntegerField()
+    next = serializers.URLField(allow_null=True)
+    previous = serializers.URLField(allow_null=True)
+    results = OccurrenceSerializer(many=True)
+    as_of = serializers.DateField()
+    counts = serializers.DictField(child=serializers.IntegerField())
+    bucket = serializers.CharField()
+
+
+class PendingCenter(PrivateResponse, generics.ListAPIView):
+    serializer_class = OccurrenceSerializer
+
+    @extend_schema(
+        parameters=[OpenApiParameter("bucket", str, enum=["overdue", "upcoming", "validation"])],
+        responses=PendingCenterOutput(many=False),
+    )
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        if set(request.query_params) - {"bucket", "page"}:
+            raise ValidationError("Parâmetro não reconhecido.")
+        bucket = request.query_params.get("bucket", "overdue")
+        today = timezone.localdate()
+        filters = {
+            "overdue": Q(status__in=ACTIVE, due_date__lt=today),
+            "upcoming": Q(
+                status__in=ACTIVE, due_date__gte=today, due_date__lte=today + timedelta(days=7)
+            ),
+            "validation": Q(status="awaiting_validation"),
+        }
+        if bucket not in filters:
+            raise ValidationError({"bucket": "Selecione overdue, upcoming ou validation."})
+        qs = cohort(request.user, {})
+        totals = qs.aggregate(**{key: Count("pk", filter=value) for key, value in filters.items()})
+        page = self.paginate_queryset(
+            detailed(qs.filter(filters[bucket])).order_by("due_date", "identifier", "id")
+        )
+        response = self.get_paginated_response(self.get_serializer(page, many=True).data)
+        # Keep the selected card consistent with pagination if a workflow changes concurrently.
+        totals[bucket] = response.data["count"]
+        response.data.update({"as_of": today, "counts": totals, "bucket": bucket})
+        return response

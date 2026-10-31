@@ -14,7 +14,7 @@ A aplicação local está verificada. A implantação institucional é uma opera
 | Capacidade | Ensaio local com 100 clientes e histórico; aprovar SLA e repetir no hardware/dados/mix de escrita alvo |
 | Acessibilidade | Axe/teclado automatizados; avaliação manual com leitores de tela e estados restantes |
 | Segurança | Auditoria de avisos das dependências; pentest/ASVS, imagens/base OS e controles corporativos ainda precisam de homologação |
-| Evidências/anexos | Funcionalidade ainda não implementada; armazenamento protegido/antivírus/procedimentos não estão homologados |
+| Evidências/anexos | Upload privado, hash, retirada lógica e backup no PostgreSQL implementados; scanner corporativo, retenção e homologação institucional seguem pendentes. Ver EVIDENCE.md |
 
 ## Preparação
 

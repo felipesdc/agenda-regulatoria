@@ -1,0 +1,12 @@
+<section aria-label="Central de pendências" class="pending-center">
+<div class="panel-heading"><h2>O que precisa de atenção</h2><button (click)="load()" [disabled]="busy()">Atualizar pendências</button></div>
+<p>Compromissos do seu escopo autorizado. Selecione um grupo para consultar todos os registros.</p>
+<p class="error" role="alert">{{error()}}</p>
+<div class="stats pending-cards" role="group" aria-label="Tipos de pendência">@for(item of buckets;track item.key){<button class="panel pending-card" (click)="load(item.key,1)" [attr.aria-pressed]="bucket()===item.key" [disabled]="busy()"><span>{{item.label}}</span><strong>{{data()?.counts?.[item.key]??'—'}}</strong><small>{{item.help}}</small></button>}</div>
+<p>Uma ocorrência pode aparecer em mais de um grupo. Os indicadores não devem ser somados. A lista de validações inclui o que você pode consultar; as ações disponíveis dependem do seu papel.</p>
+@if(data();as result){<p class="pending-date">Atualizado para {{result.as_of|date:'dd/MM/yyyy'}} · Horário de Brasília · Ordenação pelo vencimento mais antigo.</p>}
+<p role="status">{{busy()?'Carregando pendências…':''}}</p>
+<div class="commitment-list" [attr.aria-busy]="busy()">@for(row of data()?.results;track row.id){<button class="commitment-row" (click)="open(row.id)" [disabled]="busy()"><span><small>{{row.identifier}}</small><strong>{{row.title}}</strong><small>{{row.unit_name}} · {{row.entity_name}}</small></span><span><span class="badge" [class.overdue]="row.overdue">{{labels[row.status]}}</span><small>Vencimento: {{row.due_date|date:'dd/MM/yyyy'}}</small></span></button>}@empty{@if(!busy()&&!error()){<section class="panel"><p>Nenhuma pendência neste grupo.</p></section>}}</div>
+@if(data();as result){<div class="pagination"><span>{{result.count}} registros · Página {{page()}}</span><button (click)="load(bucket(),page()-1)" [disabled]="busy()||page()===1">Pendências anteriores</button><button (click)="load(bucket(),page()+1)" [disabled]="busy()||!result.next">Próximas pendências</button></div>}
+@if(selected();as id){<dialog appFocusTrap #dialog class="calendar-dialog" aria-label="Detalhes na central de pendências" (cancel)="$event.preventDefault();close()"><app-commitments [profile]="profile()" [units]="units()" mode="detail" [initialOccurrence]="id" (closed)="close()" /></dialog>}
+</section>

@@ -82,6 +82,59 @@ class ReportTests(TestCase):
     def get(self, path, extra=None):
         return self.client.get("/api/v1/reports/" + path + "/", {**self.params, **(extra or {})})
 
+    def test_pending_center_boundaries_counts_and_scope(self):
+        seventh = create_commitment(
+            self.owner, {**self.data, "due_date": self.today + timedelta(days=7)}
+        )
+        create_commitment(self.owner, {**self.data, "due_date": self.today + timedelta(days=8)})
+        self.pending.status = "awaiting_validation"
+        self.pending.save()
+        response = self.client.get("/api/v1/pending-center/", {"bucket": "upcoming"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["counts"], {"overdue": 1, "upcoming": 2, "validation": 1})
+        self.assertEqual(
+            {r["id"] for r in response.data["results"]}, {str(self.pending.pk), str(seventh.pk)}
+        )
+        self.assertIn("no-store", response["Cache-Control"])
+        validation = self.client.get("/api/v1/pending-center/", {"bucket": "validation"})
+        self.assertEqual(validation.data["count"], 1)
+        late = self.client.get("/api/v1/pending-center/")
+        self.assertEqual(late.data["results"][0]["id"], str(self.late.pk))
+        self.assertNotIn(str(self.hidden.pk), {r["id"] for r in response.data["results"]})
+
+    def test_pending_center_permissions_and_inactive_scope(self):
+        self.client.force_authenticate(None)
+        self.assertEqual(self.client.get("/api/v1/pending-center/").status_code, 403)
+        self.client.force_authenticate(self.executor)
+        self.assertEqual(self.client.get("/api/v1/pending-center/").data["count"], 1)
+        Membership.objects.filter(user=self.executor).delete()
+        self.assertEqual(
+            self.client.get("/api/v1/pending-center/").data["counts"],
+            {"overdue": 0, "upcoming": 0, "validation": 0},
+        )
+        self.client.force_authenticate(self.admin)
+        self.assertEqual(
+            self.client.get("/api/v1/pending-center/", {"bucket": "upcoming"}).data["count"], 2
+        )
+        self.unit.active = False
+        self.unit.save()
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.get("/api/v1/pending-center/").data["count"], 0)
+
+    def test_pending_center_validates_parameters_and_paginates(self):
+        for params in [{"bucket": "all"}, {"unit": str(self.other.pk)}, {"page": "bad"}]:
+            self.assertIn(
+                self.client.get("/api/v1/pending-center/", params).status_code, [400, 404]
+            )
+        for _ in range(50):
+            create_commitment(self.owner, {**self.data, "due_date": self.today - timedelta(days=2)})
+        response = self.client.get("/api/v1/pending-center/")
+        self.assertEqual(response.data["count"], 51)
+        self.assertEqual(len(response.data["results"]), 50)
+        response = self.client.get("/api/v1/pending-center/", {"page": 2})
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["counts"]["overdue"], 51)
+
     def test_summary_scope_dedup_denominators_and_empty(self):
         response = self.get("summary")
         self.assertEqual(response.status_code, 200, response.data)

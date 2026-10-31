@@ -25,6 +25,7 @@ from .serializers import (
     EditSerializer,
     TransitionSerializer,
     ActionInput,
+    ActionTextInput,
     ActionSerializer,
     OccurrenceSerializer,
     OccurrenceDetail,
@@ -192,7 +193,10 @@ class OccurrenceView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
         qs = filter_occurrences(qs, parse_filters(params))
         if self.action == "retrieve":
             qs = qs.select_related("form_version").prefetch_related(
-                "actions__author", "transitions__actor", "versions"
+                "actions__author",
+                "actions__evidence__withdrawal__actor",
+                "transitions__actor",
+                "versions",
             )
         return qs.distinct()
 
@@ -209,14 +213,28 @@ class OccurrenceView(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.
         updated = services.update_occurrence(request.user, occurrence, serializer.validated_data)
         return Response(OccurrenceDetail(updated, context={"request": request}).data)
 
-    @extend_schema(request=ActionInput, responses={201: ActionSerializer})
+    @extend_schema(
+        request={"application/json": ActionTextInput, "multipart/form-data": ActionInput},
+        responses={201: ActionSerializer},
+    )
     @action(detail=True, methods=["post"], url_path="actions")
     def add_action(self, request, pk=None):
         occurrence = self.get_object()
+        if not services.can_execute(request.user, occurrence):
+            raise PermissionDenied("Somente responsáveis atribuídos podem registrar providências.")
+        if occurrence.status not in ["in_progress", "rejected"]:
+            raise ValidationError("Inicie a execução antes de registrar providências.")
         serializer = ActionInput(data=request.data)
+        if getattr(request._request, "evidence_upload_error", False):
+            raise ValidationError({"files": "Limite de quantidade ou tamanho dos anexos excedido."})
         serializer.is_valid(raise_exception=True)
-        action = services.add_action(request.user, occurrence, serializer.validated_data["text"])
-        return Response(ActionSerializer(action).data, status=201)
+        from .evidence import prepare_files
+
+        files = prepare_files(serializer.validated_data.get("files", []))
+        action = services.add_action(
+            request.user, occurrence, serializer.validated_data["text"], files
+        )
+        return Response(ActionSerializer(action, context={"request": request}).data, status=201)
 
     @extend_schema(request=TransitionSerializer, responses=OccurrenceDetail)
     @action(detail=True, methods=["post"], url_path="transition")

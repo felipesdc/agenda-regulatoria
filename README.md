@@ -74,3 +74,13 @@ Regressão funcional/segurança/axe e carga HTTP isolada, consultas/indexação 
 As listas de compromissos preservam a última consulta aplicada e a página ao alternar seções, durante a sessão da aba. A paginação respeita os filtros aplicados; logout limpa esse estado. Detalhes em [NAVIGATION.md](docs/NAVIGATION.md).
 
 Cada seção possui sua própria URL, como `/calendario`, `/compromissos` e `/relatorios`, com suporte a atualização, favoritos do navegador e voltar/avançar. Rotas protegidas verificam a sessão e áreas administrativas exigem administrador. Links antigos de notificações continuam funcionando. Mapa de rotas e comportamento de sessão em [NAVIGATION.md](docs/NAVIGATION.md).
+
+## Central de pendências
+Abra **Central de pendências** no menu ou o atalho do Painel inicial para consultar atrasados, vencimentos nos próximos 7 dias e conclusões aguardando validação. Contadores e listas paginadas respeitam seu escopo; os detalhes permitem agir sobre o compromisso. Regras e testes em [PENDING_CENTER.md](docs/PENDING_CENTER.md).
+
+Os formulários de compromissos agora permitem buscar responsáveis e selecioná-los por caixas de seleção, mostram erros junto aos campos e avisam antes de descartar alterações. Detalhes em [FORMS.md](docs/FORMS.md).
+
+Filtros aplicados, período do calendário e paginação agora ficam na URL das consultas. É possível compartilhar/favoritar o endereço e restaurar a consulta ao recarregar ou usar voltar/avançar, mantendo as permissões. Veja [URL_FILTERS.md](docs/URL_FILTERS.md).
+
+## Anexos comprobatórios
+Responsáveis podem anexar PDF, imagens, TXT, DOCX e XLSX ao registrar providências. Downloads exigem acesso ao compromisso e conferem o hash; retiradas são lógicas, justificadas e auditadas. Os bytes ficam privados no PostgreSQL e acompanham o backup. No desenvolvimento sem scanner, a interface informa que não houve inspeção antivírus; fora de DEBUG o scanner é obrigatório. Veja [EVIDENCE.md](docs/EVIDENCE.md) para limites, configuração e recuperação.

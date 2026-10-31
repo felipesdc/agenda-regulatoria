@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from apps.accounts.models import User, Membership
 from apps.organizations.models import OrganizationalUnit
@@ -7,6 +8,7 @@ from .models import (
     CommitmentDefinition,
     CommitmentOccurrence,
     ActionRecord,
+    Evidence,
     WorkflowTransition,
     OccurrenceVersion,
 )
@@ -115,16 +117,78 @@ class TransitionSerializer(StrictSerializer):
     revision = serializers.IntegerField(min_value=1)
 
 
-class ActionInput(StrictSerializer):
+class ActionTextInput(StrictSerializer):
     text = serializers.CharField(max_length=20000)
 
 
+class EvidenceFileList(serializers.ListField):
+    def to_internal_value(self, data):
+        if isinstance(data, (list, tuple)) and len(data) > settings.EVIDENCE_MAX_FILES:
+            raise serializers.ValidationError(
+                f"Envie no máximo {settings.EVIDENCE_MAX_FILES} arquivos por providência."
+            )
+        return super().to_internal_value(data)
+
+
+class ActionInput(ActionTextInput):
+    files = EvidenceFileList(child=serializers.FileField(), required=False, write_only=True)
+
+
+class EvidenceSerializer(serializers.ModelSerializer):
+    withdrawn_at = serializers.DateTimeField(
+        source="withdrawal.created_at", read_only=True, allow_null=True
+    )
+    withdrawn_by = serializers.CharField(
+        source="withdrawal.actor.username", read_only=True, allow_null=True
+    )
+    withdrawn = serializers.SerializerMethodField()
+    withdrawal_reason = serializers.SerializerMethodField()
+    can_withdraw = serializers.SerializerMethodField()
+
+    def get_withdrawn(self, obj) -> bool:
+        return hasattr(obj, "withdrawal")
+
+    def get_withdrawal_reason(self, obj) -> str:
+        return obj.withdrawal.reason if hasattr(obj, "withdrawal") else ""
+
+    def get_can_withdraw(self, obj) -> bool:
+        from .services import can_execute, can_manage
+
+        request = self.context.get("request")
+        if not request or hasattr(obj, "withdrawal"):
+            return False
+        occurrence = obj.action.occurrence
+        return occurrence.status in ["pending", "in_progress", "rejected"] and (
+            can_manage(request.user, occurrence)
+            or (obj.action.author_id == request.user.pk and can_execute(request.user, occurrence))
+        )
+
+    class Meta:
+        model = Evidence
+        fields = [
+            "id",
+            "filename",
+            "media_type",
+            "size",
+            "sha256",
+            "inspection",
+            "uploaded_at",
+            "withdrawn",
+            "withdrawn_at",
+            "withdrawn_by",
+            "withdrawal_reason",
+            "can_withdraw",
+        ]
+        read_only_fields = fields
+
+
 class ActionSerializer(serializers.ModelSerializer):
+    evidence = EvidenceSerializer(many=True, read_only=True)
     author_name = serializers.CharField(source="author.username", read_only=True)
 
     class Meta:
         model = ActionRecord
-        fields = ["id", "author_name", "text", "created_at"]
+        fields = ["id", "author_name", "text", "created_at", "evidence"]
 
 
 class TransitionOutput(serializers.ModelSerializer):

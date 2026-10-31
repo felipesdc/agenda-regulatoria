@@ -10,7 +10,7 @@ async function login(page:Page,username:string){
 }
 async function logout(page:Page){await page.getByRole('button',{name:'Sair',exact:true}).click();await expect(page.getByRole('heading',{name:'Acesse sua agenda'})).toBeVisible();}
 async function find(page:Page,title:string){
- await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos$/);
+ await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos(?:\?|$)/);
  await page.getByLabel('Pesquisar compromissos').fill(title);
  await page.getByRole('button',{name:'Filtrar',exact:true}).click();
  await page.locator('.commitment-row').filter({hasText:title}).click();
@@ -20,16 +20,16 @@ test('create, execute, reject with complement, approve, audit and organizational
  test.setTimeout(90000);
  const title=`E2E fictício ${test.info().project.name} ${Date.now()}`;
  await login(page,'demandante1');
- await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos$/);
+ await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos(?:\?|$)/);
  await page.getByRole('button',{name:'Novo compromisso',exact:true}).click();
  await page.getByLabel('Título',{exact:true}).fill(title);
  await page.getByLabel('Descrição da obrigação').fill('Demonstração automatizada, sem validade regulatória.');
  await page.getByLabel('Fundamentação normativa',{exact:true}).fill('Teste fictício');
  await page.getByLabel('Unidade responsável').selectOption({label:'Riscos'});
- const responsible=page.getByLabel('Responsáveis pela execução');
- await expect(responsible.locator('option').filter({hasText:'demandado1'})).toHaveCount(1);
- const id=await responsible.locator('option').filter({hasText:'demandado1'}).getAttribute('value');
- await responsible.selectOption(id!);
+ const responsible=page.getByRole('group',{name:'Responsáveis pela execução',exact:true});
+ await expect(responsible.getByRole('checkbox',{name:/demandado1/})).toHaveCount(1);
+ const id=await responsible.getByRole('checkbox',{name:/demandado1/}).getAttribute('value');
+ await responsible.locator('input[value="'+id+'"]').check();
  await page.getByLabel('Entidade',{exact:true}).selectOption({index:1});
  await page.getByLabel('Categoria',{exact:true}).selectOption({index:1});
  await page.getByLabel('Data de vencimento').fill('2026-12-15');
@@ -68,10 +68,10 @@ test('create, execute, reject with complement, approve, audit and organizational
  await expect(page.getByRole('button',{name:'Editar ocorrência',exact:true})).toHaveCount(0);
  await page.screenshot({path:`../tests/e2e/artifacts/phase2-${test.info().project.name}.png`,fullPage:true});await logout(page);
  await login(page,'demandante2');
- await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos$/);
+ await page.getByRole('link',{name:'Compromissos',exact:true}).click();await expect(page).toHaveURL(/\/compromissos(?:\?|$)/);
  await page.getByLabel('Pesquisar compromissos').fill(title);await page.getByRole('button',{name:'Filtrar',exact:true}).click();
  await expect(page.locator('.commitment-row').filter({hasText:title})).toHaveCount(0);await logout(page);
- await login(page,'admin');await page.getByRole('link',{name:'Auditoria',exact:true}).click();await expect(page).toHaveURL(/\/auditoria$/);
+ await login(page,'admin');await page.getByRole('link',{name:'Auditoria',exact:true}).click();await expect(page).toHaveURL(/\/auditoria(?:\?|$)/);
  await page.getByLabel('ID do registro auditado').fill(occurrenceId);await page.getByRole('button',{name:'Filtrar auditoria',exact:true}).click();
  await expect(page.locator('.audit-list')).toContainText('workflow.approve');
  await expect(page.locator('.audit-list')).toContainText('workflow.reject');

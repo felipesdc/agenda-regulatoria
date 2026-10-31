@@ -28,3 +28,6 @@ Regressão, concorrência de revisão/outbox, carga HTTP isolada, segurança de 
 - Antes da produção, instituição deve definir provedor SSO, matriz de permissões administrativas, retenção, armazenamento/antivírus e metas de recuperação/disponibilidade.
 - Segregação será obrigatória por padrão na Fase 2; exceções exigem decisão corporativa explícita.
 - Redis/Mailpit, worker Celery e scheduler Beat ativos na Fase 5. SMTP corporativo e bounces dependem da implantação institucional.
+
+### Anexos comprobatórios — 30/10/2026
+Implementados upload em providências, arquivos privados no PostgreSQL, validação estrutural, SHA-256, download autorizado, retirada lógica, auditoria, proteção append-only e inclusão na recuperação. Interface Django Storage preparada para adaptadores privados; apenas o backend de banco está implementado e verificado. Integração clamd com bloqueio obrigatório fora de DEBUG; scanner/retenção/homologação corporativos permanecem como requisitos institucionais de RELEASE.md. Ver [EVIDENCE.md](EVIDENCE.md).

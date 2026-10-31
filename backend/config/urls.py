@@ -1,4 +1,13 @@
-from apps.reports.views import Dashboard, Summary, Groups, ReportOccurrences, Export, FavoriteView
+from apps.commitments.evidence_views import EvidenceDownload, EvidenceWithdraw, EvidencePolicy
+from apps.reports.views import (
+    PendingCenter,
+    Dashboard,
+    Summary,
+    Groups,
+    ReportOccurrences,
+    Export,
+    FavoriteView,
+)
 from apps.customfields.views import FieldView, FormView, ReferenceUsers
 from apps.commitments.calendar_views import CalendarView, CalendarPeople, SavedFilterView
 from apps.commitments.recurrence_views import HolidayView, PreviewView, SeriesOccurrenceView
@@ -19,6 +28,10 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitVie
 from apps.accounts import views
 
 urlpatterns = [
+    path("api/v1/evidence-policy/", EvidencePolicy.as_view()),
+    path("api/v1/evidence/<uuid:pk>/download/", EvidenceDownload.as_view()),
+    path("api/v1/evidence/<uuid:pk>/withdraw/", EvidenceWithdraw.as_view()),
+    path("api/v1/pending-center/", PendingCenter.as_view()),
     path("api/v1/dashboard/", Dashboard.as_view()),
     path("api/v1/reports/summary/", Summary.as_view()),
     path("api/v1/reports/groups/", Groups.as_view()),

@@ -24,6 +24,9 @@ TABLES = [
     "commitments_commitmentassignment",
     "commitments_occurrenceversion",
     "commitments_actionrecord",
+    "commitments_evidence",
+    "commitments_evidenceblob",
+    "commitments_evidencewithdrawal",
     "commitments_workflowtransition",
     "commitments_recurrenceversion",
     "customfields_formversion",
@@ -133,10 +136,22 @@ def main():
                 probe.returncode == 0 or b"Historical records are append-only" not in probe.stderr
             ):
                 raise RuntimeError("Teste de imutabilidade não passou na cópia.")
+            invalid_evidence = int(
+                sql(
+                    "SELECT count(*) FROM commitments_evidence e LEFT JOIN commitments_evidenceblob b ON replace(b.id::text, '-', '')=e.storage_key WHERE e.storage_backend='apps.commitments.evidence_storage.DatabaseEvidenceStorage' AND (b.id IS NULL OR octet_length(b.content)<>e.size OR encode(sha256(b.content),'hex')<>e.sha256)",
+                    target,
+                )
+            )
+            if invalid_evidence:
+                raise RuntimeError(
+                    "Integridade de evidência restaurada divergiu do hash registrado."
+                )
             manifest.update(
                 restore_checked=True,
                 restored_tables=restored,
                 stable_tables_compared=len(stable),
+                stable_tables=stable,
+                evidence_integrity_checked=True,
                 history_triggers=protections,
             )
         finally:
