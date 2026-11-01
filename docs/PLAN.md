@@ -31,3 +31,7 @@ Regressão, concorrência de revisão/outbox, carga HTTP isolada, segurança de 
 
 ### Anexos comprobatórios — 30/10/2026
 Implementados upload em providências, arquivos privados no PostgreSQL, validação estrutural, SHA-256, download autorizado, retirada lógica, auditoria, proteção append-only e inclusão na recuperação. Interface Django Storage preparada para adaptadores privados; apenas o backend de banco está implementado e verificado. Integração clamd com bloqueio obrigatório fora de DEBUG; scanner/retenção/homologação corporativos permanecem como requisitos institucionais de RELEASE.md. Ver [EVIDENCE.md](EVIDENCE.md).
+
+## Evolução: backup automatizado
+
+Comando agendável com restauração isolada obrigatória, lock, status e retenção conservadora implementado; modelos systemd e cron descritos em RECOVERY.md. Ativação do agendamento, cópia fora do host, alertas e homologação de RPO/RTO dependem da infraestrutura operacional.

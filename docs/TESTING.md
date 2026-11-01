@@ -184,3 +184,7 @@ Regressão inclui criação/edição, rascunhos, campos personalizados, recorrê
 - Build Angular/Docker, TypeScript, Ruff/check/format, OpenAPI (`--validate --fail-on-warn`), migrações sem divergência e whitespace aprovados. `pip-audit` não encontrou vulnerabilidades conhecidas nas dependências fixadas, incluindo Pillow 13.0.0 e pypdf 6.21.4.
 
 A regressão identificou e corrigiu uma corrida preexistente no carregamento inicial do calendário: ações agora ficam bloqueadas até o carregamento terminar. O teste segura uma resposta real de catálogo para verificar esse bloqueio. Guia e limites em [EVIDENCE.md](EVIDENCE.md).
+
+## Automação de backup
+
+`python -m unittest tools.test_scheduled_backup` verifica retenção/mínimo de cópias, arquivos corrompidos/manuais, links simbólicos e falha sem limpeza. Incluído no CI. `python3 tools/scheduled_backup.py` executa o ensaio real de backup/restauração com integridade dos anexos; requer Docker/Compose ativo.

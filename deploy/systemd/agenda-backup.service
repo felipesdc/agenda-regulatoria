@@ -1,0 +1,13 @@
+[Unit]
+Description=Agenda: backup PostgreSQL com ensaio de restauração
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=agenda-backup
+WorkingDirectory=/opt/agenda-regulatoria
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 /opt/agenda-regulatoria/tools/scheduled_backup.py --directory /var/lib/agenda-backups --retention-days 30 --keep-at-least 7
+UMask=0077
+TimeoutStartSec=3900

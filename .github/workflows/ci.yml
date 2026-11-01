@@ -25,6 +25,7 @@ jobs:
         with: {python-version: '3.12'}
       - run: pip install -r backend/requirements.txt
       - run: ruff check backend tools && ruff format --check backend tools
+      - run: python -m unittest tools.test_scheduled_backup
       - run: python backend/manage.py makemigrations --check --dry-run
       - run: cd backend && coverage run --rcfile=../pyproject.toml manage.py test --noinput && coverage report --rcfile=../pyproject.toml
       - run: python backend/manage.py spectacular --validate --fail-on-warn --file /tmp/schema.yaml

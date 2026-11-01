@@ -1,0 +1,11 @@
+[Unit]
+Description=Agenda: backup diário
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=agenda-backup.service
+
+[Install]
+WantedBy=timers.target
